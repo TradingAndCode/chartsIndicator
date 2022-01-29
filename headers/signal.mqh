@@ -65,27 +65,23 @@ int OnCalcSignal(int rates_total, int prev_calculated)
 
         Index[i] = i;
 
-        static datetime candletime = 0;
-        datetime time = iTime(NULL, PERIOD_CURRENT, i);
-
         if (!flatTenkanFound)
         {
             if (DetectFlatTenkan(value, i + 1))
             {
-                candletime = time;
+                // flat detected
             }
         }
         else
         {
-            if (NewBar())
+            if (NewOldBar(i))
             {
-                Print("NewBar");
                 if (tradeType == Sell)
                 {
-                    monitorSellEntry(nextCandleTenkan, i + 1, candletime);
+                    monitorSellEntry(nextCandleTenkan, i + 1);
                 }
                 else
-                    monitorBuyEntry(nextCandleTenkan, i + 1, candletime);
+                    monitorBuyEntry(nextCandleTenkan, i + 1);
             }
         }
 
@@ -100,8 +96,9 @@ int OnCalcSignal(int rates_total, int prev_calculated)
             //
         )
         {
-            resetAll();
+
             Buffer1[i + 1] = Low[1 + i]; // Set indicator value at Candlestick Low
+            resetAll();
             if (i == 0 && Time[0] != time_alert)
             {
                 myAlert("indicator", "Buy");
@@ -110,7 +107,10 @@ int OnCalcSignal(int rates_total, int prev_calculated)
         }
         else
         {
-            Buffer1[i] = EMPTY_VALUE;
+            if (Buffer1[i + 1] != Low[1 + i])
+            {
+                Buffer1[i + 1] = EMPTY_VALUE;
+            }
         }
 
         // Indicator Buffer 3
@@ -122,8 +122,8 @@ int OnCalcSignal(int rates_total, int prev_calculated)
             //
         )
         {
+            Buffer2[i + 1] = High[i + 1]; // Set indicator value at Candlestick High
             resetAll();
-            Buffer2[i] = High[i+1]; // Set indicator value at Candlestick High
             if (i == 0 && Time[0] != time_alert)
             {
                 myAlert("indicator", "Sell");
@@ -132,7 +132,10 @@ int OnCalcSignal(int rates_total, int prev_calculated)
         }
         else
         {
-            Buffer2[i] = EMPTY_VALUE;
+            if (Buffer2[i + 1] != High[i + 1])
+            {
+                Buffer2[i + 1] = EMPTY_VALUE;
+            }
         }
     }
     return 0;
@@ -180,7 +183,6 @@ int OnSignalInit()
 
 void resetAll()
 {
-    Print("resetAll()");
     lastFlatPrice = 0;
     lastFlatIndex = 0;
     flatTenkanFound = false;
@@ -191,9 +193,8 @@ void resetAll()
     triangleFound = false;
 }
 
-void monitorSellEntry(double nextCandleTenkan, int i, datetime candletime)
+void monitorSellEntry(double nextCandleTenkan, int i)
 {
-    datetime time = iTime(NULL, PERIOD_CURRENT, i);
     if (!nextCandleGreaterThanFlat)
     {
         if (lastFlatPrice > 0)
@@ -201,19 +202,16 @@ void monitorSellEntry(double nextCandleTenkan, int i, datetime candletime)
 
             if (nextCandleTenkan > lastFlatPrice)
             {
-                candletime = time;
                 nextCandleGreaterThanFlat = true;
                 nextCandleGreaterThanFlatPrice = nextCandleTenkan;
             }
             else
             {
-                Print("reset because nextCandleTenkan < lastFlatPrice");
                 resetAll();
             }
         }
         else
         {
-            Print("reset because lastFlatPrice == 0");
             resetAll();
         }
     }
@@ -221,39 +219,29 @@ void monitorSellEntry(double nextCandleTenkan, int i, datetime candletime)
     {
         if (!tenkanCandleComingToFlat)
         {
-            Print("inside tenkanCandleComingToFlat is false");
             if (nextCandleGreaterThanFlatPrice > 0)
             {
-                Print("inside nextCandleGreaterThanFlatPrice > 0 ", nextCandleGreaterThanFlatPrice);
                 if (nextCandleTenkan < nextCandleGreaterThanFlatPrice)
                 {
-                    candletime = time;
-                    Print("inside nextCandleTenkan < nextCandleGreaterThanFlatPrice before set ", nextCandleTenkan, " ", tenkanCandleComingToFlatPrice);
                     tenkanCandleComingToFlat = true;
                     tenkanCandleComingToFlatPrice = nextCandleTenkan;
                 }
                 else
                 {
-                    Print("reset because nextCandleTenkan > nextCandleGreaterThanFlatPrice");
                     resetAll();
                 }
             }
             else
             {
-                Print("reset because nextCandleGreaterThanFlatPrice is 0");
                 resetAll();
             }
         }
         else
         {
-            Print("inside tenkanCandleComingToFlat is true");
             if (tenkanCandleComingToFlatPrice > 0)
             {
-                Print("inside tenkanCandleComingToFlatPrice > 0 ", tenkanCandleComingToFlatPrice, " ", nextCandleTenkan);
                 if (nextCandleTenkan < tenkanCandleComingToFlatPrice)
                 {
-                    candletime = time;
-                    Print("inside nextCandleTenkan < tenkanCandleComingToFlatPrice");
                     tenkanCandleComingToFlatPrice = nextCandleTenkan;
                     double nextCandleKijun = iIchimokuMQL4(NULL, PERIOD_CURRENT, 9, 26, 52, 1, i);
                     double previousCandleKijun = iIchimokuMQL4(NULL, PERIOD_CURRENT, 9, 26, 52, 1, i + 1);
@@ -262,10 +250,8 @@ void monitorSellEntry(double nextCandleTenkan, int i, datetime candletime)
 
                     if (signalMode == Aggressiv)
                     {
-                        Print("inside Aggressiv");
                         if (MA[i + 1] > nextCandleTenkan) // cross
                         {
-                            Print("the signal is placed");
                             triangleFound = true;
                         }
                     }
@@ -280,20 +266,18 @@ void monitorSellEntry(double nextCandleTenkan, int i, datetime candletime)
                 }
                 else
                 {
-                    Print("reset because nextCandleTenkan >= tenkanCandleComingToFlatPrice");
                     resetAll();
                 }
             }
             else
             {
-                Print("reset because tenkanCandleComingToFlatPrice is 0");
                 resetAll();
             }
         }
     }
 }
 
-void monitorBuyEntry(double nextCandleTenkan, int i, datetime candletime)
+void monitorBuyEntry(double nextCandleTenkan, int i)
 {
     if (!nextCandleGreaterThanFlat)
     {
@@ -339,10 +323,25 @@ void monitorBuyEntry(double nextCandleTenkan, int i, datetime candletime)
                 if (nextCandleTenkan > tenkanCandleComingToFlatPrice)
                 {
                     tenkanCandleComingToFlatPrice = nextCandleTenkan;
+                    double nextCandleKijun = iIchimokuMQL4(NULL, PERIOD_CURRENT, 9, 26, 52, 1, i);
+                    double previousCandleKijun = iIchimokuMQL4(NULL, PERIOD_CURRENT, 9, 26, 52, 1, i + 1);
+                    double previousCandleKijun2 = iIchimokuMQL4(NULL, PERIOD_CURRENT, 9, 26, 52, 1, i + 2);
+                    double previousCandleTenkan = iIchimokuMQL4(NULL, PERIOD_CURRENT, 9, 26, 52, 0, i + 1);
 
-                    if (MA[i + 1] < nextCandleTenkan) // cross
+                    if (signalMode == Aggressiv)
                     {
-                        triangleFound = true;
+                        if (MA[i + 1] < nextCandleTenkan) // cross
+                        {
+                            triangleFound = true;
+                        }
+                    }
+                    else
+                    {
+                        if (
+                            previousCandleKijun2 == nextCandleKijun && previousCandleKijun == nextCandleKijun && previousCandleTenkan < previousCandleKijun && nextCandleKijun < nextCandleTenkan && nextCandleKijun == lastFlatPrice)
+                        {
+                            triangleFound = true;
+                        }
                     }
                 }
                 else
@@ -352,4 +351,20 @@ void monitorBuyEntry(double nextCandleTenkan, int i, datetime candletime)
                 resetAll();
         }
     }
+}
+
+bool NewOldBar(int i)
+{
+
+    int Shift = i;
+
+    static datetime LastTime = 0;
+
+    if (iTime(NULL, PERIOD_CURRENT, Shift) != LastTime)
+    {
+        LastTime = iTime(NULL, PERIOD_CURRENT, Shift) + time_offset;
+        return (true);
+    }
+    else
+        return (false);
 }
