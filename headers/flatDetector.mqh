@@ -1,11 +1,12 @@
 
 
 
-int DetectFlatTenkan(double &price, int j)
+bool DetectFlatTenkan(double &price, int j)
 {
     if (j + 3 >= lastFlatIndex && lastFlatIndex != 0) // if the to study candles include the last flat index return 
     {
-        return 0;
+        Print("return on first if");
+        return false;
     }
 
     double trailPrice = iIchimokuMQL4(NULL, PERIOD_CURRENT, 9, 26, 52, 0, j);
@@ -18,7 +19,7 @@ int DetectFlatTenkan(double &price, int j)
         if (temp == trailPrice)
         {
             total++;
-            // Print("the total is incrementing ", total);
+            Print("the total is incrementing ", total);
         }
         else
         {
@@ -42,7 +43,7 @@ int DetectFlatTenkan(double &price, int j)
 
         flatTenkanFound = true;
 
-        return i;
+        return true;
     }
-    return 0;
+    return false;
 }

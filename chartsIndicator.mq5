@@ -3,7 +3,7 @@
 //|                                       Created By Steven Nkeneng  |
 //|                                     https://www.stevennkeneng.com|
 //+------------------------------------------------------------------+
-#property copyright "Steven Nkeneng (Trading & Code) - 2021-2021"
+#property copyright "Steven Nkeneng (Trading & Code) - 2021-2022"
 #property link "https://tradingandcode.com"
 #property version "1.00"
 #property description "Indicator sending trade signal based on ..."
@@ -31,41 +31,54 @@
 
 #property indicator_label3 "candle index"
 
-#define indicatorName "chartsIndicator"
+#include "headers/defines.mqh"
 
-#define Bid bid()
 
-#define Ask ask()
-
-#define OBJPROP_TIME1 300
-
-#define OBJPROP_PRICE1 301
-
-#define OBJPROP_TIME2 302
-
-#define OBJPROP_PRICE2 303
-
-#define OBJPROP_TIME3 304
-
-#define OBJPROP_PRICE3 305
-
-#define OBJPROP_FIBOLEVELS 200
-
-//--- indicator buffers
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|               indicator buffers                                  |
+//|                                                                  |
+//+------------------------------------------------------------------+
 double Buffer1[];
 double Buffer2[];
 double Index[];
 
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|              custom types                                        |
+//|                                                                  |
+//+------------------------------------------------------------------+
 enum TradeType
 {
   Buy = 1,
   Sell = 2
 };
 
+enum SignalMode
+{
+  Aggressiv = 1,
+  Secured = 2
+};
+
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                          inputs                                  |
+//|                                                                  |
+//+------------------------------------------------------------------+
 input bool Audible_Alerts = false;
 input bool Push_Notifications = false;
 input TradeType tradeType = Buy;
+input bool showAll = true;
+input SignalMode signalMode = Secured;
 
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                          variables                               |
+//|                                                                  |
+//+------------------------------------------------------------------+
 int lastFlatIndex = 0;
 double lastFlatPrice = 0;
 bool flatTenkanFound = false;
@@ -88,10 +101,20 @@ double Time[];
 int ATR_handle;
 double ATR[];
 
-
-
 int Ichimoku_handle;
 double Ichimoku_tenkan[];
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|             authorized logins                                    |
+//|                                                                  |
+//+------------------------------------------------------------------+
+long LoginsArray[] = {
+    3170564,
+    3542835, // hermann
+    20323508, // darlin
+    20203654 // darlin
+};
 
 //------------------------------------------------------------------------------------------------------------
 //--------------------------------------------- pips counter  ----------------------------------------
@@ -118,6 +141,11 @@ int numberOfPositions = 0;
 int supports = 0;
 int resistances = 0;
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//|                         headers                                  |
+//|                                                                  |
+//+------------------------------------------------------------------+
 #include "headers/initmql4.mqh"
 
 #include "headers/utils.mqh"
@@ -133,6 +161,7 @@ int resistances = 0;
 #include "headers/moreinfo.mqh"
 
 #include "headers/drawObjects.mqh"
+
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |

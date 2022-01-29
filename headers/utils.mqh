@@ -178,3 +178,13 @@ int stringToTimeFrame(string tf)
       return (iTfTable[i]);
   return (0);
 }
+
+template <typename T>
+int array_contains(const T &arr[], T what)
+{
+  int i = ArraySize(arr);
+  while (--i >= 0)
+    if (arr[i] == what)
+      break;
+  return i;
+}

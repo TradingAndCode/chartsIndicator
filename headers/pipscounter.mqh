@@ -1,4 +1,3 @@
-input bool showAll = true;
 
 void calcProfitAll(double &out)
 {
