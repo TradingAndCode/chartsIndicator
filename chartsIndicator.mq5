@@ -16,8 +16,8 @@
 
 //--- indicator settings
 #property indicator_chart_window
-#property indicator_buffers 7
-#property indicator_plots 7
+#property indicator_buffers 9
+#property indicator_plots 9
 
 #property indicator_type1 DRAW_ARROW
 #property indicator_width1 3
@@ -29,10 +29,10 @@
 #property indicator_color2 0xFFFFFF
 #property indicator_label2 "Sell"
 
-#property indicator_label3 "candle index"
+
+#property indicator_label5 "candle index"
 
 #include "headers/defines.mqh"
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -41,8 +41,9 @@
 //+------------------------------------------------------------------+
 double Buffer1[];
 double Buffer2[];
+double Buffer3[];
+double Buffer4[];
 double Index[];
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -60,7 +61,6 @@ enum SignalMode
   Aggressiv = 1,
   Secured = 2
 };
-
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -88,6 +88,7 @@ bool tenkanSmallerThanFlat = false;
 bool tenkanCandleComingToFlat = false;
 double tenkanCandleComingToFlatPrice = 0;
 bool triangleFound = false;
+bool revengeSignal = true;
 
 datetime time_alert; // used when sending alert
 double myPoint;      // initialized in OnInit
@@ -111,9 +112,10 @@ double Ichimoku_tenkan[];
 //+------------------------------------------------------------------+
 long LoginsArray[] = {
     3170564,
-    3542835, // hermann
+    3542835,  // hermann
     20323508, // darlin
-    20203654 // darlin
+    20203654, // darlin
+    20208253, // fahad
 };
 
 //------------------------------------------------------------------------------------------------------------
@@ -161,7 +163,6 @@ int resistances = 0;
 #include "headers/moreinfo.mqh"
 
 #include "headers/drawObjects.mqh"
-
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |

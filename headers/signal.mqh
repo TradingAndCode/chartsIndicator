@@ -8,11 +8,15 @@ int OnCalcSignal(int rates_total, int prev_calculated)
 
     ArraySetAsSeries(Buffer1, true);
     ArraySetAsSeries(Buffer2, true);
+    ArraySetAsSeries(Buffer3, true);
+    ArraySetAsSeries(Buffer4, true);
     //--- initial zero
     if (prev_calculated < 1)
     {
         ArrayInitialize(Buffer1, EMPTY_VALUE);
         ArrayInitialize(Buffer2, EMPTY_VALUE);
+        ArrayInitialize(Buffer3, EMPTY_VALUE);
+        ArrayInitialize(Buffer4, EMPTY_VALUE);
     }
     else
         limit++;
@@ -85,20 +89,21 @@ int OnCalcSignal(int rates_total, int prev_calculated)
             }
         }
 
-        // Indicator Buffer 1
-        if (
-            //
-            tradeType == Buy
+        bool normalTradeBuy = tradeType == Buy && triangleFound;
+        bool normalTradeSell = tradeType == Sell && triangleFound;
+        bool revengeTradeBuy = tradeType == Buy && revengeSignal && Close[i + 1] < Open[i + 1];
+        // bool revengeTradeBuy = tradeType == Buy && revengeSignal && Close[i + 2] < Open[i + 2] && Close[i + 1] > Open[i + 1];
+        bool revengeTradeSell = tradeType == Sell && revengeSignal && Close[i + 1] > Open[i + 1];
+        // bool revengeTradeSell = tradeType == Sell && revengeSignal && Close[i + 2] > Open[i + 2] && Close[i + 1] < Open[i + 1];
 
-            //
-            && triangleFound
-
-            //
-        )
+        if (normalTradeBuy)
         {
-
             Buffer1[i + 1] = Low[1 + i]; // Set indicator value at Candlestick Low
-            resetAll();
+            if (normalTradeBuy)
+            {
+                resetAll();
+            }
+
             if (i == 0 && Time[0] != time_alert)
             {
                 myAlert("indicator", "Buy");
@@ -113,17 +118,35 @@ int OnCalcSignal(int rates_total, int prev_calculated)
             }
         }
 
-        // Indicator Buffer 3
-        if (
-            //
-            tradeType == Sell
-            //
-            && triangleFound
-            //
-        )
+        if (revengeTradeBuy)
+        {
+            Buffer3[i + 1] = Low[1 + i]; // Set indicator value at Candlestick Low
+            if (normalTradeBuy)
+            {
+                resetAll();
+            }
+
+            if (i == 0 && Time[0] != time_alert)
+            {
+                myAlert("indicator", "Buy");
+                time_alert = Time[0];
+            } // Instant alert, only once per bar
+        }
+        else
+        {
+            if (Buffer3[i + 1] != Low[1 + i])
+            {
+                Buffer3[i + 1] = EMPTY_VALUE;
+            }
+        }
+
+        if (normalTradeSell)
         {
             Buffer2[i + 1] = High[i + 1]; // Set indicator value at Candlestick High
-            resetAll();
+            if (normalTradeSell)
+            {
+                resetAll();
+            }
             if (i == 0 && Time[0] != time_alert)
             {
                 myAlert("indicator", "Sell");
@@ -137,6 +160,23 @@ int OnCalcSignal(int rates_total, int prev_calculated)
                 Buffer2[i + 1] = EMPTY_VALUE;
             }
         }
+
+        if (revengeTradeSell)
+        {
+            Buffer4[i + 1] = High[i + 1]; // Set indicator value at Candlestick High
+            if (i == 0 && Time[0] != time_alert)
+            {
+                myAlert("indicator", "Sell");
+                time_alert = Time[0];
+            } // Instant alert, only once per bar
+        }
+        else
+        {
+            if (Buffer4[i + 1] != High[i + 1])
+            {
+                Buffer4[i + 1] = EMPTY_VALUE;
+            }
+        }
     }
     return 0;
 }
@@ -147,12 +187,18 @@ int OnSignalInit()
     PlotIndexSetDouble(0, PLOT_EMPTY_VALUE, EMPTY_VALUE);
     PlotIndexSetInteger(0, PLOT_ARROW, 233);
 
+    SetIndexBuffer(2, Buffer3);
+    PlotIndexSetDouble(2, PLOT_EMPTY_VALUE, EMPTY_VALUE);
+
     SetIndexBuffer(1, Buffer2);
     PlotIndexSetDouble(1, PLOT_EMPTY_VALUE, EMPTY_VALUE);
     PlotIndexSetInteger(1, PLOT_ARROW, 234);
 
-    SetIndexBuffer(2, Index);
-    PlotIndexSetDouble(2, PLOT_EMPTY_VALUE, EMPTY_VALUE);
+    SetIndexBuffer(3, Buffer4);
+    PlotIndexSetDouble(3, PLOT_EMPTY_VALUE, EMPTY_VALUE);
+
+    SetIndexBuffer(4, Index);
+    PlotIndexSetDouble(4, PLOT_EMPTY_VALUE, EMPTY_VALUE);
 
     // initialize myPoint
     myPoint = Point();
