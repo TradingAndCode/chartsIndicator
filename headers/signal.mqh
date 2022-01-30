@@ -250,15 +250,27 @@ void monitorSellEntry(double nextCandleTenkan, int i)
 
                     if (signalMode == Aggressiv)
                     {
-                        if (MA[i + 1] > nextCandleTenkan) // cross
+                        if (MA[i] > nextCandleTenkan) // cross
                         {
+                            Print("the ma is greater than the tenkan ", MA[i + 1], " > ", nextCandleTenkan);
                             triangleFound = true;
                         }
                     }
                     else
                     {
                         if (
-                            previousCandleKijun2 == nextCandleKijun && previousCandleKijun == nextCandleKijun && previousCandleTenkan > previousCandleKijun && nextCandleKijun > nextCandleTenkan && nextCandleKijun == lastFlatPrice)
+                            //
+                            previousCandleKijun2 == nextCandleKijun
+                            //
+                            && previousCandleKijun == nextCandleKijun
+                            //
+                            && previousCandleTenkan > previousCandleKijun
+                            //
+                            && nextCandleKijun > nextCandleTenkan
+                            //
+                            && nextCandleKijun == lastFlatPrice
+                            //
+                        )
                         {
                             triangleFound = true;
                         }

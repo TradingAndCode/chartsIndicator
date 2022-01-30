@@ -1,9 +1,11 @@
 
 
+int numberOfBackCandlesToSearch = 3;
+int numberOfCandlesForFlat = 2;
 
 bool DetectFlatTenkan(double &price, int j)
 {
-    if (j + 3 >= lastFlatIndex && lastFlatIndex != 0) // if the to study candles include the last flat index return 
+    if (j + numberOfBackCandlesToSearch >= lastFlatIndex && lastFlatIndex != 0) // if the to study candles include the last flat index return 
     {
         Print("return on first if");
         return false;
@@ -13,13 +15,12 @@ bool DetectFlatTenkan(double &price, int j)
 
     int i = j;
     int total = 0;
-    for (i; i < j + 3; i++)
+    for (i; i < j + numberOfBackCandlesToSearch; i++)
     {
         double temp = iIchimokuMQL4(NULL, PERIOD_CURRENT, 9, 26, 52, 0, i);
         if (temp == trailPrice)
         {
             total++;
-            Print("the total is incrementing ", total);
         }
         else
         {
@@ -31,11 +32,11 @@ bool DetectFlatTenkan(double &price, int j)
         }
     }
 
-    if (total >= 2)
+    if (total >= numberOfCandlesForFlat)
     {
         price = trailPrice;
 
-        drawSegmentHLine(indicatorName + i, price, i, i + 2);
+        drawSegmentHLine(indicatorName + i, price, i, i + numberOfCandlesForFlat);
 
         lastFlatIndex = j;
 
