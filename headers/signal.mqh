@@ -125,12 +125,6 @@ int OnCalcSignal(int rates_total, int prev_calculated)
             {
                 resetAll();
             }
-
-            if (i == 0 && Time[0] != time_alert)
-            {
-                myAlert("indicator", "Buy");
-                time_alert = Time[0];
-            } // Instant alert, only once per bar
         }
         else
         {
@@ -164,11 +158,6 @@ int OnCalcSignal(int rates_total, int prev_calculated)
         if (revengeTradeSell)
         {
             Buffer4[i + 1] = High[i + 1]; // Set indicator value at Candlestick High
-            if (i == 0 && Time[0] != time_alert)
-            {
-                myAlert("indicator", "Sell");
-                time_alert = Time[0];
-            } // Instant alert, only once per bar
         }
         else
         {
@@ -187,12 +176,12 @@ int OnSignalInit()
     PlotIndexSetDouble(0, PLOT_EMPTY_VALUE, EMPTY_VALUE);
     PlotIndexSetInteger(0, PLOT_ARROW, 233);
 
-    SetIndexBuffer(2, Buffer3);
-    PlotIndexSetDouble(2, PLOT_EMPTY_VALUE, EMPTY_VALUE);
-
-    SetIndexBuffer(1, Buffer2);
+     SetIndexBuffer(1, Buffer2);
     PlotIndexSetDouble(1, PLOT_EMPTY_VALUE, EMPTY_VALUE);
     PlotIndexSetInteger(1, PLOT_ARROW, 234);
+
+    SetIndexBuffer(2, Buffer3);
+    PlotIndexSetDouble(2, PLOT_EMPTY_VALUE, EMPTY_VALUE);
 
     SetIndexBuffer(3, Buffer4);
     PlotIndexSetDouble(3, PLOT_EMPTY_VALUE, EMPTY_VALUE);
@@ -298,7 +287,6 @@ void monitorSellEntry(double nextCandleTenkan, int i)
                     {
                         if (MA[i] > nextCandleTenkan) // cross
                         {
-                            Print("the ma is greater than the tenkan ", MA[i + 1], " > ", nextCandleTenkan);
                             triangleFound = true;
                         }
                     }

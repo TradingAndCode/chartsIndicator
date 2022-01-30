@@ -29,6 +29,9 @@
 #property indicator_color2 0xFFFFFF
 #property indicator_label2 "Sell"
 
+#property indicator_label3 "" // revenge buy
+#property indicator_label4 "" // revenge sell
+
 
 #property indicator_label5 "candle index"
 
@@ -67,8 +70,8 @@ enum SignalMode
 //|                          inputs                                  |
 //|                                                                  |
 //+------------------------------------------------------------------+
-input bool Audible_Alerts = false;
-input bool Push_Notifications = false;
+input bool Audible_Alerts = true;
+input bool Push_Notifications = true;
 input TradeType tradeType = Buy;
 input bool showAll = true;
 input SignalMode signalMode = Secured;
@@ -179,12 +182,12 @@ int OnInit()
     return initResult;
   }
 
-  // int initRsResult = InitRS();
+  int initRsResult = InitRS();
 
-  // if (initRsResult == INIT_FAILED)
-  // {
-  //   return initRsResult;
-  // }
+  if (initRsResult == INIT_FAILED)
+  {
+    return initRsResult;
+  }
 
   onInitMoreInfo();
 
@@ -209,7 +212,7 @@ int OnCalculate(const int rates_total,
 {
   prevCalculated = prev_calculated - 1;
   OnCalcSignal(rates_total, prev_calculated);
-  // OnCalcRS(rates_total, prev_calculated);
+  OnCalcRS(rates_total, prev_calculated);
   calculateRSNumber();
   startPipsCounter();
   startMoreInfo();
@@ -219,7 +222,7 @@ int OnCalculate(const int rates_total,
 
 void OnDeinit(const int reason)
 {
-  ObjectsDeleteAll(0, "SSSR#", 0, OBJ_RECTANGLE);
+  DeleteRS();
   ObjectsDeleteAll(0, "bsri_pips", 0, OBJ_LABEL);
   ObjectsDeleteAll(0, "stecatorInfo", 0, OBJ_LABEL);
   ObjectsDeleteAll(0, indicatorName, 0, OBJ_LABEL);

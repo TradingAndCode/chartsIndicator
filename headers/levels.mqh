@@ -36,7 +36,7 @@ int zone_limit = 1000;
 bool zone_show_info = false;
 bool zone_show_size = false;
 int zone_label_shift = 3;
-color color_label = clrWhite;      //Label color
+color color_label = clrYellow;      //Label color
 string font_label = "Courier New"; //Label Font
 int size_label = 9;                //Label size
 
@@ -115,15 +115,15 @@ int InitRS()
     return (INIT_FAILED);
   }
 
-  SetIndexBuffer(2, SlowDnPts);
-  SetIndexBuffer(3, SlowUpPts);
-  SetIndexBuffer(4, FastDnPts);
-  SetIndexBuffer(5, FastUpPts);
+  SetIndexBuffer(5, SlowDnPts);
+  SetIndexBuffer(6, SlowUpPts);
+  SetIndexBuffer(7, FastDnPts);
+  SetIndexBuffer(8, FastUpPts);
 
-  PlotIndexSetInteger(2, PLOT_DRAW_TYPE, DRAW_NONE);
-  PlotIndexSetInteger(3, PLOT_DRAW_TYPE, DRAW_NONE);
-  PlotIndexSetInteger(4, PLOT_DRAW_TYPE, DRAW_NONE);
   PlotIndexSetInteger(5, PLOT_DRAW_TYPE, DRAW_NONE);
+  PlotIndexSetInteger(6, PLOT_DRAW_TYPE, DRAW_NONE);
+  PlotIndexSetInteger(7, PLOT_DRAW_TYPE, DRAW_NONE);
+  PlotIndexSetInteger(8, PLOT_DRAW_TYPE, DRAW_NONE);
 
   if (TimeFrame != 1 && TimeFrame != 5 && TimeFrame != 15 &&
       TimeFrame != 60 && TimeFrame != 240 && TimeFrame != 1440 &&
@@ -149,7 +149,6 @@ int InitRS()
 
 bool NewBar()
 {
-
   int Shift = 0;
   if (Testing)
     Shift = LastBar;
@@ -183,11 +182,7 @@ void OnCalcRS(int rates_total, int prev_calculated)
   ArraySetAsSeries(ATR, true);
 
   bool newbar = NewBar();
-
-  // if (newbar == true)
-  // {
   OnNewBar();
-  // }
   CheckAlerts();
 }
 
@@ -208,8 +203,120 @@ void OnNewBar()
   DrawZones();
   if (zone_count < old_zone_count)
     DeleteOldGlobalVars(old_zone_count);
+  
+  drawLabels();
 }
 
+
+void drawLabels(){
+  if (zone_show_info == true)
+        {
+            for (int i = 0; i < zone_count; i++)
+            {
+                string lbl;
+                if (zone_strength[i] == ZONE_WEAK)
+                    lbl = "Weak";
+                else if (zone_strength[i] == ZONE_VERIFIED)
+                    lbl = "Verified";
+                else if (zone_strength[i] == ZONE_UNTESTED)
+                    lbl = "Untested";
+                else if (zone_strength[i] == ZONE_TURNCOAT)
+                    lbl = "Turncoat";
+                else
+                    lbl = "Possible";
+
+                if (zone_type[i] == ZONE_SUPPORT)
+                    lbl = lbl + " Support";
+                else
+                    lbl = lbl + " Resistance";
+
+                if (zone_show_size == true)
+                {
+                    int tam = 0;
+                    tam = (zone_hi[i] - zone_lo[i]) * (MathPow(10, Digits()));
+                    lbl = lbl + "(" + tam + "p)";
+                }
+
+                if (zone_hits[i] > 0 && zone_strength[i] > ZONE_UNTESTED)
+                {
+                    if (zone_hits[i] == 1)
+                        lbl = lbl + ", Test Count=" + zone_hits[i];
+                    else
+                        lbl = lbl + ", Test Count=" + zone_hits[i];
+                }
+
+                int adjust_hpos;
+                int wbpc = ChartGetInteger(0,CHART_VISIBLE_BARS,0);
+                int k;
+
+                k = Period() * 60 + (20 + StringLen(lbl));
+
+                if (wbpc < 80)
+                    adjust_hpos = iTime(NULL, TFMigrate(TimeFrame), LastBar + 0) + k * 4;
+                else if (wbpc < 125)
+                    adjust_hpos = iTime(NULL, TFMigrate(TimeFrame), LastBar + 0) + k * 8;
+                else if (wbpc < 250)
+                    adjust_hpos = iTime(NULL, TFMigrate(TimeFrame), LastBar + 0) + k * 15;
+                else if (wbpc < 480)
+                    adjust_hpos = iTime(NULL, TFMigrate(TimeFrame), LastBar + 0) + k * 29;
+                else if (wbpc < 950)
+                    adjust_hpos = iTime(NULL, TFMigrate(TimeFrame), LastBar + 0) + k * 58;
+                else
+                    adjust_hpos = iTime(NULL, TFMigrate(TimeFrame), LastBar + 0) + k * 115;
+                int shift = 0;
+                if (LastBar > 0)
+                     shift = -77 * Period() * 60; //maybe we should use   -zone_label_shift * k
+                else
+                    shift = k * zone_label_shift;
+
+                double vpos = zone_hi[i] - (zone_hi[i] - zone_lo[i]) / 2;
+
+                if (zone_strength[i] == ZONE_UNTESTED && zone_show_untested == false)
+                {
+                    continue;
+                }
+
+                if (zone_strength[i] == ZONE_VERIFIED && zone_show_verified == false)
+                {
+                    continue;
+                }
+
+                if (zone_strength[i] == ZONE_WEAK && zone_show_weak == false)
+                {
+                    continue;
+                }
+
+                if (zone_strength[i] == ZONE_TURNCOAT && zone_show_truncoat == false)
+                {
+                    continue;
+                }
+
+                if (zone_strength[i] == ZONE_POSSIBLE && zone_show_possible == false)
+                {
+                    continue;
+                }
+
+                string s = "SSSR#" + i + "LBL";
+                ObjectCreateMQL4(s, OBJ_LABEL, 0, 0, 0);
+                ObjectSetMQL4(s, OBJPROP_TIME1, adjust_hpos + shift);
+                ObjectSetMQL4(s, OBJPROP_PRICE1, vpos);
+                ObjectSetTextMQL4(s, StringRightPad(lbl, 36, " "),size_label, font_label, color_label);
+            }
+        }
+}
+
+string StringRightPad(string str, int n = 1, string str2 = " ")
+{
+    return (str + StringRepeat(str2, n - StringLen(str)));
+}
+
+string StringRepeat(string str, int n = 1)
+{
+    string outstr = "";
+    for (int i = 0; i < n; i++)
+        outstr = outstr + str;
+    return (outstr);
+}
 
 
 void FastFractals()
@@ -990,6 +1097,7 @@ void DrawZones()
     ObjectSetInteger(0, sBorder, OBJPROP_SELECTED, false);
     ObjectSetInteger(0, s, OBJPROP_TIME, iTime(NULL, PERIOD_CURRENT, zone_start[i]));
     ObjectSetInteger(0, sBorder, OBJPROP_TIME, iTime(NULL, PERIOD_CURRENT, zone_start[i]));
+
     if (LastBar > 0)
     {
       ObjectSetInteger(0, s, OBJPROP_TIME, 1, iTime(NULL, PERIOD_CURRENT, zone_end[i]) - 3 * Period() * 60);

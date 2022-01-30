@@ -36,7 +36,7 @@ bool DetectFlatTenkan(double &price, int j)
     {
         price = trailPrice;
 
-        drawSegmentHLine(indicatorName + i, price, i, i + numberOfCandlesForFlat);
+        // drawSegmentHLine(indicatorName + i, price, i, i + numberOfCandlesForFlat);
 
         lastFlatIndex = j;
 
